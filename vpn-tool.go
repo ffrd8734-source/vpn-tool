@@ -16,7 +16,7 @@ import (
 	"golang.org/x/term"
 )
 
-const Version = "1.0.1"
+const Version = "1.0.3"
 const ApiBase = "https://vpn-gateway-manager--jjajajjajahsh.replit.app"
 
 type AuthProfile struct {
@@ -645,7 +645,7 @@ func main() {
 		Short: "List aliases.",
 		Run: func(cmd *cobra.Command, args []string) {
 			file := getAliasFile()
-			if _, err := os.Stat(file); os.IsNotExist(file) { // note: os.IsNotExist(err) handled fine
+			if _, err := os.Stat(file); os.IsNotExist(err) {
 				fmt.Println("No aliases configured.")
 				return
 			}
