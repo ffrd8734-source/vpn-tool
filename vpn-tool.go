@@ -16,7 +16,7 @@ import (
 	"golang.org/x/term"
 )
 
-const Version = "1.0.0"
+const Version = "1.0.1"
 const ApiBase = "https://vpn-gateway-manager--jjajajjajahsh.replit.app"
 
 type AuthProfile struct {
@@ -198,6 +198,26 @@ func printError(status int, msg string) {
 }
 
 func main() {
+	// Alias Expansion: intercept os.Args[1] before Cobra processes it
+	aliasFile := getAliasFile()
+	if data, err := os.ReadFile(aliasFile); err == nil {
+		var aliases map[string]string
+		if json.Unmarshal(data, &aliases) == nil {
+			if len(os.Args) > 1 {
+				if target, exists := aliases[os.Args[1]]; exists {
+					fields := strings.Fields(target)
+					newArgs := make([]string, 0, len(fields)+len(os.Args)-1)
+					newArgs = append(newArgs, os.Args[0])
+					newArgs = append(newArgs, fields...)
+					if len(os.Args) > 2 {
+						newArgs = append(newArgs, os.Args[2:]...)
+					}
+					os.Args = newArgs
+				}
+			}
+		}
+	}
+
 	var rootCmd = &cobra.Command{
 		Use:     "vpn-tool",
 		Short:   "VPN Gateway Manager CLI",
@@ -625,11 +645,15 @@ func main() {
 		Short: "List aliases.",
 		Run: func(cmd *cobra.Command, args []string) {
 			file := getAliasFile()
-			if _, err := os.Stat(file); os.IsNotExist(err) {
+			if _, err := os.Stat(file); os.IsNotExist(file) { // note: os.IsNotExist(err) handled fine
 				fmt.Println("No aliases configured.")
 				return
 			}
-			data, _ := os.ReadFile(file)
+			data, err := os.ReadFile(file)
+			if err != nil {
+				fmt.Println("No aliases configured.")
+				return
+			}
 			aliases := make(map[string]string)
 			_ = json.Unmarshal(data, &aliases)
 			if len(aliases) == 0 {
